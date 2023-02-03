@@ -25,8 +25,10 @@ a:hover {
 }
 
 body {
+    max-width: 100%;
+    background-color: wheat;
     margin: 0;
-    display: flex;
+    /*display: flex;*/
     place-items: center;
     min-width: 320px;
     min-height: 100vh;
@@ -63,17 +65,19 @@ button:focus-visible {
 }
 
 #app {
-    max-width: 1280px;
+    max-width: 100%;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1rem;
     text-align: center;
+    background-color: #f9f9f9;
 }
 
-#id {
-    max-width: 1280px;
+#base {
+    max-width: 100%;
     margin: 0 auto;
     padding: 2rem;
     text-align: center;
+    background-color: #888888;
 }
 
 @media (prefers-color-scheme: light) {
@@ -104,19 +108,25 @@ nav ul {
 nav ul li {
     list-style: none;
     display: inline-block;
-    width: 30%; /* ここで項目の幅を指定します */
+    width: 15%; /* ここで項目の幅を指定します */
+    padding: 1px 2px; /*余白*/
+    background: #e3f6f5; /*背景色*/
+    border-top: solid 1px #3dbfb8; /*枠線・上*/
+    border-bottom: solid 1px #3dbfb8; /*枠線・下*/
+    border-right: solid 1px #3dbfb8; /*枠線・右*/
+
 }
 
-nav ul li::after {
-    content: "/";
-    padding-left: 50px; /* li要素のwidthと調整が必要 */
-    color: #888;
+/*nav ul li::after {*/
+/*    content: "/";*/
+/*    padding-left: 50px; !* li要素のwidthと調整が必要 *!*/
+/*    color: #888;*/
 
-}
+/*}*/
 
-nav ul li:last-child::after {
-    content: ""; /* 最後のli要素の「/」をなくします */
-}
+/*nav ul li:last-child::after {*/
+/*    content: ""; !* 最後のli要素の「/」をなくします *!*/
+/*}*/
 
 nav ul li a {
     text-decoration: none;
