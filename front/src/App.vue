@@ -13,28 +13,42 @@ const clicked = () => {
 </script>
 
 <template>
-  <nav>
-    <ul>
-      <li><a href="">home</a></li>
-      <li><a href="http://localhost:8000/admin/">管理サイト</a></li>
-      <li><a href="/api/index.json" @click.prevent="clicked">index.json</a></li>
-    </ul>
-  </nav>
-  <div id="left"></div>
-  <div v-if="txt !=='dummy2'" v-html="txt" style="width: 640px; height: 480px;"></div>
-  <MyTest/>
-  <!--  <HelloWorld msg="unti vue"/>-->
+  <div id="wrapper">
+    <nav id="header">
+      <ul>
+        <li><a href="">home</a></li>
+        <li><a href="http://localhost:8000/admin/">管理サイト</a></li>
+        <li><a href="/api/index.json" @click.prevent="clicked">index.json</a></li>
+      </ul>
+    </nav>
+    <div id="left"></div>
+    <div id="main" v-if="txt !=='dummy2'" v-html="txt" style="width: 640px; height: 480px;"></div>
+  </div>
 </template>
 
 <style scoped>
-nav ul {
-    margin: 0;
-    padding: 0;
-    height: 40px;
-    background-color: red;
+#wrapper{
+    min-height: 800px;
+    display: grid;
+    grid-template:
+        "header  header header" 80px
+        "left    main   main  " 1fr
+        /150px   1fr;
+    gap: 5px;
 }
-#left{
-  background-color: #3dbfb8;
-  width: 100px;
+#header {
+    grid-area: header;
+    border: 1px solid black;
+    padding-left: 20px;
+}
+#left {
+    grid-area: left;
+    border: 1px solid black;
+    text-align: center;
+}
+
+#main {
+    grid-area: main;
+    border: 1px solid black;
 }
 </style>
