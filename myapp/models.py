@@ -33,3 +33,6 @@ class Trades(models.Model):
 
     def __str__(self):
         return "取引" + self.brand.unique_code() + self.trade_date.strftime("%Y年%m月%d日")
+
+    def values(self):
+        return "{} {} {} {}".format(self.trade_date, self.open_value, self.close_value, self.low_value)
