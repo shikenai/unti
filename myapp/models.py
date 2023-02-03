@@ -5,7 +5,7 @@ class Brand(models.Model):
     nation = models.CharField(max_length=30, blank=True, null=True, verbose_name='国')
     market = models.CharField(max_length=20, blank=True, null=True)
     brand_name = models.CharField(max_length=50, blank=True, null=True)
-    code = models.IntegerField(blank=True, null=True)
+    code = models.CharField(max_length=5, blank=True, null=True)
     division = models.CharField(max_length=20, blank=True, null=True)
     industry_code_1 = models.CharField(max_length=10, blank=True, null=True)
     industry_division_1 = models.CharField(max_length=10, blank=True, null=True)

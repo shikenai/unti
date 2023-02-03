@@ -1,9 +1,11 @@
 from django.core.management.base import BaseCommand
 import pandas as pd
 from unti.settings import BASE_DIR
-from myapp.models import Brand
-def test():
-    df = pd.read_csv(BASE_DIR.parent / "data/brand.csv")
+from myapp.models import Brand, Trades
+
+
+def reg_brands_from_csv():
+    df = pd.read_csv(BASE_DIR / "data/brand.csv")
     de_records = df.to_dict(orient='records')
     model_inserts = []
     for d in de_records:
@@ -22,13 +24,27 @@ def test():
         ))
     Brand.objects.bulk_create(model_inserts)
 
-def test1(aaa):
-    print("run test1")
-    print(aaa)
-def test2(bbb):
-    print("run test2")
-    print(bbb)
 
+def reg_trades_from_csv():
+    df = pd.read_csv(BASE_DIR / "data/trade.csv")
+    de_records = df.to_dict(orient='records')
+    model_inserts = []
+    # {'Unnamed: 0': 2276171, 'id': 2276173, 'brand': 'ニチレイ(東証１部:2871)', 'brand_code': '2871.jp',
+    #  'trade_date': '1999-04-06', 'open_value': 491.157, 'close_value': 489.357, 'high_value': 496.586,
+    #  'low_value': 480.317, 'volume': 312293}
+    for d in de_records:
+        model_inserts.append(Trades(
+            brand=Brand.objects.get(code=d["brand_code"].split(".")[0], nation=d["brand_code"].split(".")[1]),
+            brand_code=d["brand_code"],
+            trade_date=d["trade_date"],
+            open_value=d["open_value"],
+            close_value=d["close_value"],
+            high_value=d["high_value"],
+            low_value=d["low_value"],
+            volume=d["volume"]
+        ))
+    print(model_inserts)
+    # Trades.objects.bulk_create(model_inserts)
 
 
 class Command(BaseCommand):
@@ -39,6 +55,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options["first"] == "aaa":
-            test1()
+            reg_brands_from_csv()
         elif options["first"] == "bbb":
-            test2()
+            reg_trades_from_csv()
