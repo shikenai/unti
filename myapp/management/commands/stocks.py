@@ -1,9 +1,7 @@
 from django.core.management.base import BaseCommand
 import pandas as pd
-from app.models import Brand
-from test.settings import BASE_DIR
-
-
+from unti.settings import BASE_DIR
+from myapp.models import Brand
 def test():
     df = pd.read_csv(BASE_DIR.parent / "data/brand.csv")
     de_records = df.to_dict(orient='records')
@@ -24,9 +22,23 @@ def test():
         ))
     Brand.objects.bulk_create(model_inserts)
 
+def test1(aaa):
+    print("run test1")
+    print(aaa)
+def test2(bbb):
+    print("run test2")
+    print(bbb)
+
+
 
 class Command(BaseCommand):
     help = "register TSE brands"
 
+    def add_arguments(self, parser):
+        parser.add_argument("first", type=str)
+
     def handle(self, *args, **options):
-        test()
+        if options["first"] == "aaa":
+            test1()
+        elif options["first"] == "bbb":
+            test2()

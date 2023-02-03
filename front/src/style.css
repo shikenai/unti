@@ -78,3 +78,35 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+
+nav {
+    text-align: center;
+}
+
+nav ul {
+    margin: 0 ;
+    padding: 0 ;
+}
+
+nav ul li{
+    list-style: none;
+    display: inline-block;
+    width: 30%; /* ここで項目の幅を指定します */
+}
+
+nav ul li::after{
+    content: "/";
+    padding-left: 50px; /* li要素のwidthと調整が必要 */
+    color: #888;
+
+}
+
+nav ul li:last-child::after {
+    content: ""; /* 最後のli要素の「/」をなくします */
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: #333;
+}

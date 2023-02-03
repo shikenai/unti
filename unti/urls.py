@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.urls import path
-from myapp.views import index
+from myapp import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', index),
-    path('api/index.json', index),
+    path('', views.home),
+    path('api/index.json', views.index),
 ]
