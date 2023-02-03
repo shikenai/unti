@@ -43,6 +43,7 @@ def get_svg2http_response(days, brand_code):
             volume=True)
     svg = plt2svg()  # SVG化
     plt.cla()  # グラフをリセット
+    plt.close()
     response = HttpResponse(svg, content_type='image/svg+xml')
     res_str = response.content.decode('utf-8')
     return res_str
