@@ -3,10 +3,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-// export default {
-//   name: "MyTest"
-// }
+import axios from "axios";
+
+window.onload = () => {
+  console.log("test console")
+  axios.get("api/index.json").then(res => {
+    console.log(res)
+    console.log(res.data.user)
+    const testname = res.data.user
+  })
+}
 </script>
 
 <style scoped>
