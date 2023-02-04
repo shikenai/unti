@@ -34,7 +34,7 @@ const clicked = () => {
     min-height: 800px;
     display: grid;
     grid-template:
-        "header  header header" 80px
+        "header  header header" 40px
         "main    main   main  " 1fr
         /150px   1fr;
     gap: 5px;

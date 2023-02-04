@@ -2,34 +2,54 @@
 import axios from "axios";
 import {ref} from "vue";
 
-let companies = ref({"keyword":"key","coms": <object>[]})
-const get_brand = axios.get("api/get_brand_list.json").then(res=>{
-  // console.log(res.data)
-  // console.log(typeof res.data)
-  companies.value.coms = res.data
-})
+let companies = ref({"keyword": "", "brands": <object>[]})
+const get_brands = () => {
+  axios.get("api/get_brand_list.json").then(res => {
+    companies.value.brands = res.data
+  })
+}
+window.onload = () => {
+  get_brands()
+}
 
-// console.log(companies.value.keyword)
-companies.value.keyword = "unti"
-// companies.value.coms = {"unticom1": 1, "unticom2": 2}
-console.log(companies.value.coms)
-// console.log(companies.value.coms)
+const txt = ref<string>("dummy2")
+const onKeyPressEnter = () => {
+  axios.defaults.xsrfCookieName = 'csrftoken'
+  axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
+  axios.post("api/index.json", postData.value).then(res => {
+    console.log(res)
+    txt.value = res.data
+  })
+}
+let postData = ref({brand_code:"", days:0})
+
 </script>
 <template>
+  <div class="main">
+<!--  <button @click="get_brands">botan</button>-->
   <div class="left_bar">
-    <input type="text" v-model="companies">
-    <table>
-            <tr v-for="c in companies">
-              <td v-text="c.code"></td>
-            </tr>
-    </table>
+    <label for="brand_code">銘 柄 名：</label>
+    <input id="brand_code" type="text" v-model="postData.brand_code" @keypress.enter="onKeyPressEnter" ><br>
+    <label for="days">取得日数：</label>
+    <input id="days" type="text" v-model="postData.days" @keypress.enter="onKeyPressEnter">
+<!--    <table>-->
+<!--      <tr v-for="c in companies.brands" :key="c.code">-->
+<!--        <td v-text="c.code"></td>-->
+<!--        <td v-text="c.brand_name"></td>-->
+<!--      </tr>-->
+<!--    </table>-->
   </div>
   <div class="drawing">
-
+    <div id="main" v-if="txt !=='dummy2'" v-html="txt" style="width: 640px; height: 480px;"></div>
   </div>
+    </div>
 </template>
 
 <style scoped>
+
+.main {
+  display: flex;
+}
 .left_bar {
   width: 150px;
   padding-top: 5px;
@@ -43,6 +63,6 @@ console.log(companies.value.coms)
 }
 
 input {
-  width: 130px;
+  width: 50px;
 }
 </style>

@@ -5,10 +5,12 @@ import mplfinance as mf
 from myapp.models import Trades, Brand
 from django_pandas.io import read_frame
 import pandas as pd
-
+import json
 
 def index(request):
-    plt = drawer.get_svg2http_response(250, "7203.jp")
+    req = json.loads(request.body)
+    print(req)
+    plt = drawer.get_svg2http_response(int(req["days"]), req["brand_code"])
     return HttpResponse(plt)
 
 
