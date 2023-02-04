@@ -16,7 +16,7 @@ const txt = ref<string>("dummy2")
 const onKeyPressEnter = () => {
   axios.defaults.xsrfCookieName = 'csrftoken'
   axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
-  axios.post("api/index.json", postData.value).then(res => {
+  axios.post("api/get_trade_data.json", postData.value).then(res => {
     console.log(res)
     txt.value = res.data
   })

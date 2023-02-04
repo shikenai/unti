@@ -7,9 +7,9 @@ from django_pandas.io import read_frame
 import pandas as pd
 import json
 
-def index(request):
+
+def get_trade_data(request):
     req = json.loads(request.body)
-    print(req)
     plt = drawer.get_svg2http_response(int(req["days"]), req["brand_code"])
     return HttpResponse(plt)
 
