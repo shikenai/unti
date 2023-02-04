@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import MyTest from "./components/MyTest.vue";
+import SearchBox from "./components/SearchBox.vue";
 import axios from "axios";
 import {ref} from "vue";
 
@@ -21,8 +22,10 @@ const clicked = () => {
         <li><a href="/api/index.json" @click.prevent="clicked">index.json</a></li>
       </ul>
     </nav>
-    <div id="left"></div>
-    <div id="main" v-if="txt !=='dummy2'" v-html="txt" style="width: 640px; height: 480px;"></div>
+    <div id="main">
+      <SearchBox />
+    </div>
+<!--    <div id="main" v-if="txt !=='dummy2'" v-html="txt" style="width: 640px; height: 480px;"></div>-->
   </div>
 </template>
 
@@ -32,14 +35,14 @@ const clicked = () => {
     display: grid;
     grid-template:
         "header  header header" 80px
-        "left    main   main  " 1fr
+        "main    main   main  " 1fr
         /150px   1fr;
     gap: 5px;
 }
 #header {
     grid-area: header;
     border: 1px solid black;
-    padding-left: 20px;
+    padding: 20px;
 }
 #left {
     grid-area: left;
