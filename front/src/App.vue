@@ -11,47 +11,55 @@ const clicked = () => {
     txt.value = res.data
   })
 }
+const toggleSearchBox = ref<boolean>(false)
+const switchToggleSearchBox = () => {
+  console.log(toggleSearchBox.value)
+  toggleSearchBox.value = !toggleSearchBox.value
+}
 </script>
 
 <template>
   <div id="wrapper">
     <nav id="header">
       <ul>
+        <li><a href="api/test">test</a></li>
         <li><a href="">home</a></li>
         <li><a href="http://localhost:8000/admin/">管理サイト</a></li>
-        <li><a href="/api/index.json" @click.prevent="clicked">index.json</a></li>
+        <li><a href="" @click.prevent="switchToggleSearchBox">search切り替え</a></li>
       </ul>
     </nav>
     <div id="main">
-      <SearchBox />
+      <SearchBox v-if="toggleSearchBox"/>
     </div>
-<!--    <div id="main" v-if="txt !=='dummy2'" v-html="txt" style="width: 640px; height: 480px;"></div>-->
+    <!--    <div id="main" v-if="txt !=='dummy2'" v-html="txt" style="width: 640px; height: 480px;"></div>-->
   </div>
 </template>
 
 <style scoped>
-#wrapper{
-    min-height: 800px;
-    display: grid;
-    grid-template:
-        "header  header header" 40px
+#wrapper {
+  min-height: 800px;
+  display: grid;
+  grid-template:
+        "header  header header" 60px
         "main    main   main  " 1fr
         /150px   1fr;
-    gap: 5px;
+  gap: 5px;
 }
+
 #header {
-    grid-area: header;
-    border: 1px solid black;
-    padding: 20px;
+  grid-area: header;
+  border: 1px solid black;
+  padding: 20px;
 }
+
 #left {
-    grid-area: left;
-    border: 1px solid black;
-    text-align: center;
+  grid-area: left;
+  border: 1px solid black;
+  text-align: center;
 }
 
 #main {
-    grid-area: main;
-    border: 1px solid black;
+  grid-area: main;
+  border: 1px solid black;
 }
 </style>
