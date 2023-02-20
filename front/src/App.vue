@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import MyTest from "./components/MyTest.vue";
 import SearchBox from "./components/SearchBox.vue";
+import GetTradesBox from "./components/GetTradesBox.vue";
 import axios from "axios";
 import {ref} from "vue";
 
@@ -12,9 +13,14 @@ const clicked = () => {
   })
 }
 const toggleSearchBox = ref<boolean>(false)
+const toggleGetTradeBox = ref<boolean>(false)
 const switchToggleSearchBox = () => {
-  console.log(toggleSearchBox.value)
   toggleSearchBox.value = !toggleSearchBox.value
+  toggleGetTradeBox.value = false
+}
+const switchGetTradeBox = () => {
+  toggleGetTradeBox.value = !toggleGetTradeBox.value
+  toggleSearchBox.value = false
 }
 </script>
 
@@ -26,10 +32,12 @@ const switchToggleSearchBox = () => {
         <li><a href="">home</a></li>
         <li><a href="http://localhost:8000/admin/">管理サイト</a></li>
         <li><a href="" @click.prevent="switchToggleSearchBox">search切り替え</a></li>
+        <li><a href="" @click.prevent="switchGetTradeBox">GetTradeBox切り替え</a></li>
       </ul>
     </nav>
     <div id="main">
       <SearchBox v-if="toggleSearchBox"/>
+      <GetTradesBox v-if="toggleGetTradeBox"/>
     </div>
     <!--    <div id="main" v-if="txt !=='dummy2'" v-html="txt" style="width: 640px; height: 480px;"></div>-->
   </div>

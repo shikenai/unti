@@ -25,6 +25,7 @@ def plt2svg():
 def get_svg2http_response(days, brand_code):
     _trades = Trades.objects.filter(brand_code=brand_code).order_by("trade_date")
     n = _trades.count()
+    print(n)
     x = days
     if n < x:
         n_minus = 0

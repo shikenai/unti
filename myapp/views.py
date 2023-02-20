@@ -12,6 +12,7 @@ def test(request):
     analizer.test()
     return render(request, "test.html")
 
+
 def get_trade_data(request):
     req = json.loads(request.body)
     plt = drawer.get_svg2http_response(int(req["days"]), req["brand_code"])

@@ -5,6 +5,7 @@ from myapp.models import Brand, Trades
 import time
 from django_pandas.io import read_frame
 import datetime
+import numpy as np
 
 
 def set_gdx(row):
@@ -17,13 +18,16 @@ def set_gdx(row):
 
 
 def set_sanyaku(row):
-    if row["conversion_line"] > row["base_line"] and row["lagging_span"] > row["close_value"] > row["leading_span1"] and row["close_value"] > row["leading_span2"]:
+    # set_ichimoku_cloud()後に使用するもの。三役好転か、三役暗転かどうかを判定する
+    if row["conversion_line"] > row["base_line"] and row["lagging_span"] > row["close_value"] > row["leading_span1"] and \
+            row["close_value"] > row["leading_span2"]:
         row["sanyaku"] = True
     elif row["conversion_line"] < row["base_line"] and row["lagging_span"] < row["close_value"] < row[
-            "leading_span1"] and row["close_value"] < row["leading_span2"]:
+        "leading_span1"] and row["close_value"] < row["leading_span2"]:
         row["sanyaku"] = False
     else:
         row["sanyaku"] = None
+    # set_ichimoku_cloud()後に使用するもの。終値が雲の上にあるのか下にあるのかを判定する
     if row["close_value"] > row["leading_span1"] and row["close_value"] > row["leading_span2"]:
         row["over_cloud"] = True
     elif row["close_value"] < row["leading_span1"] and row["close_value"] < row["leading_span2"]:
@@ -65,24 +69,67 @@ def set_ichimoku_cloud(df):
     return df
 
 
+def set_ma(df, short_span, long_span):
+    df["short_MA"] = df["close_value"].rolling(short_span).mean()
+    df["long_MA"] = df["close_value"].rolling(long_span).mean()
+    return df
+
+
+def set_close_diff(df):
+    # 日々の終値の差分を抽出するとともに、その割合を計算
+    df["diff_close_value"] = df["close_value"].diff()
+    df["diff_close_value_rate"] = df["close_value"].pct_change()
+    return df
+
+
+# ------MACD--start------
+# 指数平滑移動平均計算
+def calc_ema(prices, period):
+    ema = np.zeros(len(prices))
+    ema[:] = np.nan  # NaN で初期化
+    ema[period - 1] = prices[:period].mean()  # 最初だけ単純移動平均
+    for d in range(period, len(prices)):
+        ema[d] = ema[d - 1] + (prices[d] - ema[d - 1]) / (period + 1) * 2
+    return ema
+
+
+# MACD 計算
+def calc_macd(prices, period_short, period_long, period_signal):
+    ema_short = calc_ema(prices, period_short)
+    ema_long = calc_ema(prices, period_long)
+    macd = ema_short - ema_long  # MACD = 短期移動平均 - 長期移動平均
+    signal = pd.Series(macd).rolling(period_signal).mean()  # シグナル = MACD の移動平均
+    hist = macd - signal
+    return macd, signal, hist
+
+
+def set_macd(df):
+    df['macd_line'], df['macd_signal'], df['macd_hist'] = calc_macd(df.close_value, 12, 26, 9)
+    return df
+
+# ------MACD---end-------
+
+
 def test():
     _trades = Trades.objects.filter(brand_code="7203.jp").order_by("trade_date")
     n = _trades.count()
-    x = 3000
+    x = 100
     if n < x:
         n_minus = 0
     else:
         n_minus = n - x
     df = read_frame(_trades.all()[n_minus:n])
-    df["short_MA"] = df["close_value"].rolling(3).mean()
-    df["long_MA"] = df["close_value"].rolling(25).mean()
-    df["diff_close_value"] = df["close_value"].diff()
-    df["diff_close_value_rate"] = df["close_value"].pct_change()
+    # df = set_ma(df, 3, 26)
+    # df = df.apply(set_gdx, axis=1)
+    # df = set_close_diff(df)
+    # df = set_ichimoku_cloud(df)
+    # df = df.apply(set_sanyaku, axis=1)
+    df = set_macd(df)
     pd.set_option('display.max_columns', df.shape[1])
-    df = df.apply(set_gdx, axis=1)
-    df = set_ichimoku_cloud(df)
-    df = df.apply(set_sanyaku, axis=1)
     print(df)
+    # print(df.head(30))
+    # print("----------------------")
+    # print(df.tail(30))
 
 
 class Command(BaseCommand):
