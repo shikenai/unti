@@ -14,6 +14,7 @@ def test(request):
 
 
 def get_trade_data(request):
+    print('get trade data')
     req = json.loads(request.body)
     plt = drawer.get_svg2http_response(int(req["days"]), req["brand_code"])
     return HttpResponse(plt)
@@ -27,3 +28,13 @@ def get_brand_list(request):
 
 def home(request):
     return redirect("http://localhost:5173/")
+
+
+def get_trades_from_stooq(request):
+    stocks.get_trades_from_stooq()
+    return JsonResponse({"user": "taro"})
+
+
+def get_brands_from_tse(request):
+    stocks.get_tse_brands()
+    return JsonResponse({"user": "taro"})

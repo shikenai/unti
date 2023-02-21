@@ -37,6 +37,7 @@ const switchGetTradeBox = () => {
     </nav>
     <div id="main">
       <SearchBox v-if="toggleSearchBox"/>
+      <br>
       <GetTradesBox v-if="toggleGetTradeBox"/>
     </div>
     <!--    <div id="main" v-if="txt !=='dummy2'" v-html="txt" style="width: 640px; height: 480px;"></div>-->

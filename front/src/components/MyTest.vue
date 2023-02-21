@@ -7,7 +7,7 @@ const wei = ref('untitti')
 
 console.log("test console")
 let geta = ref([])
-axios.get("api/index.json").then(res => {
+axios.get("/api/index.json").then(res => {
   console.log(res)
   console.log(res.data.user)
   geta.value = res.data.user

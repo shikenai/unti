@@ -1,12 +1,25 @@
 <script setup lang="ts">
-const unti = () => {
-  console.log('untitititi')
+import axios from "axios";
+import {ref} from "vue";
+
+const get_trades_from_stooq = () => {
+  console.log('higu higu')
+  axios.get('api/get_trades_from_stooq').then(res => {
+    console.log(res)
+  })
 }
+
+const get_brands_from_tse = () => {
+  axios.get('api/get_brands_from_tse').then(res => {
+  })
+}
+
 </script>
 <template>
   <div class="main">
     <div class="left_bar">
-    <a href="" class="btn" @click="unti">Button</a>
+      <a href="" class="btn" @click.prevent="get_brands_from_tse">Get Brands From TSE</a>
+      <a href="" class="btn" @click.prevent="get_trades_from_stooq">Get From STOOQ</a>
     </div>
     <div class="drawing">
     </div>
