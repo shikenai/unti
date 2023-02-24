@@ -10,7 +10,7 @@ class Brand(models.Model):
     industry_code_1 = models.CharField(max_length=10, blank=True, null=True)
     industry_division_1 = models.CharField(max_length=10, blank=True, null=True)
     industry_code_2 = models.CharField(max_length=10, blank=True, null=True)
-    industry_division_2 = models.CharField(max_length=10, blank=True, null=True)
+    industry_division_2 = models.CharField(max_length=20, blank=True, null=True)
     scale_code = models.CharField(max_length=10, blank=True, null=True)
     scale_division = models.CharField(max_length=10, blank=True, null=True)
 

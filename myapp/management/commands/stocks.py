@@ -6,6 +6,7 @@ import time
 import pandas_datareader.data as data
 import datetime as dt
 import os
+from django_pandas.io import read_frame
 
 
 def reg_brands_from_csv():
@@ -54,10 +55,47 @@ def reg_trades_from_csv():
 
 def get_trades_from_stooq():
     print('from stppq')
-    start = dt.datetime(2023, 1, 1)
-    end = dt.datetime.today() + dt.timedelta(days=1)
-    df = data.DataReader('7203.jp', "stooq", start, end)
-    print(df)
+    # これはこれでいい感じだけど、一旦処理の順番を考えて見ることにした
+    # t1 = time.time()
+    # df = read_frame(Trades.objects.all().order_by("trade_date"))
+    # df = df[["trade_date", "brand_code"]].groupby("brand_code").max()
+    # df = df.reset_index()
+    # list_brand_code = df["brand_code"].to_list()
+    # list_trade_date= df["trade_date"].to_list()
+    # _df = df["trade_date"].sort_values().drop_duplicates().to_list()
+    # dict_tradedate_brandcode = {}
+    # print(time.time() - t1)
+
+
+    # get_target_brands("jp")[0] は、既にある程度の取引状況をデータとして保有しているもの
+    # →各銘柄ごとの、取引最終日を取得し、その日以降のデータを取得する必要がある
+
+    # →全ての銘柄について、一律指定した日からデータ取得日までのデータを取得すれば良い
+    # print("8888.jp" in get_target_brands("jp")[0])
+
+
+def sort_out_2lists(list1, list2):
+    # ベン図の交わる部分
+    intersection = set(list1) & set(list2)
+    # ベン図のうち、どちらかに含まれる部分
+    union_minus_intersection = set(list1) ^ set(list2)
+    # ベン図のうち、list1にのみ含まれる部分
+    only_list1 = set(list1) & set(union_minus_intersection)
+    # ベン図のうち、list2にのみ含まれる部分
+    only_list2 = set(list2) & set(union_minus_intersection)
+    return intersection, only_list1, only_list2
+
+
+def get_target_brands(nation):
+    # 最新の銘柄リスト
+    list_csv_brand = list(pd.read_csv(BASE_DIR / "data/before_brand.csv")["コード"])  # ここでは数値として取得しているみたい
+    list_csv_brand_str = [str(c) + "." + nation for c in list_csv_brand]  # だから文字列に変換する
+    # tradesに登録済の銘柄リスト
+    brands_in_trades = list(Trades.objects.all().order_by("brand_code").distinct().values_list('brand_code', flat=True))
+
+    return sort_out_2lists(list_csv_brand_str, brands_in_trades)[0], \
+        sort_out_2lists(list_csv_brand_str, brands_in_trades)[1], sort_out_2lists(list_csv_brand_str, brands_in_trades)[
+        2]
 
 
 def get_tse_brands():
@@ -74,7 +112,7 @@ def get_tse_brands():
         _brands = Brand.objects.filter(code=d["コード"])
         if _brands.count() == 0:
             brand_model_inserts.append(Brand(
-                nation="日本",
+                nation="jp",
                 market="東証１部",
                 brand_name=d["銘柄名"],
                 code=d["コード"],

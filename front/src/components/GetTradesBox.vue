@@ -18,8 +18,8 @@ const get_brands_from_tse = () => {
 <template>
   <div class="main">
     <div class="left_bar">
-      <a href="" class="btn" @click.prevent="get_brands_from_tse">Get Brands From TSE</a>
-      <a href="" class="btn" @click.prevent="get_trades_from_stooq">Get From STOOQ</a>
+      <a href="" class="btn" @click.prevent="get_brands_from_tse">Get Brands From TSE</a><br>
+      <a href="" class="btn" @click.prevent="get_trades_from_stooq">Get Trades From STOOQ</a>
     </div>
     <div class="drawing">
     </div>
@@ -33,7 +33,7 @@ const get_brands_from_tse = () => {
 }
 
 .left_bar {
-  width: 150px;
+  width: 200px;
   padding-top: 5px;
   border: solid black 1px;
   min-height: 800px;
