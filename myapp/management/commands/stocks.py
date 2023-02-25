@@ -1,3 +1,5 @@
+import datetime
+
 from django.core.management.base import BaseCommand
 import pandas as pd
 from unti.settings import BASE_DIR
@@ -65,26 +67,38 @@ def reg_trades_from_csv():
 def get_trades_from_stooq():
     print('from stppq')
     t1 = time.time()
-    # list_brand_code = df["brand_code"].to_list()
-    # list_trade_date= df["trade_date"].to_list()
-    # _df = df["trade_date"].sort_values().drop_duplicates().to_list()
-    # dict_tradedate_brandcode = {}
-
+    # パターン１　既にある程度の取引情報データを保有しているもの
     # get_target_brands("jp")[0] は、既にある程度の取引状況をデータとして保有しているもの
-    # →各銘柄ごとの、取引最終日を取得し、その日以降のデータを取得する必要がある
+    # →各銘柄ごとの、取引最終日を取得し、その日以降のデータを取得する必要があるため、listで取得
     owned_brands = get_target_brands('jp')[0]
-    print(owned_brands)
-    # いい感じ
-    # df = read_frame(Trades.objects.all().order_by("trade_date"))
-    # df = df[["trade_date", "brand_code"]].groupby("brand_code").max()
-    # df = df.reset_index()
-    # target_trade_date_list = df["trade_date"].sort_values().drop_duplicates().to_list()
-    # returning_list = []
-    # for i in range(len(target_trade_date_list)):
-    #     a = df[df["trade_date"] == target_trade_date_list[i]]["brand_code"].to_list()
-    #     returning_list.append({target_trade_date_list[i]: a})
-    # print(returning_list)
-    # いい感じ
+    # 一旦、現在保有している全ての取引情報をdataframeにする
+    df = read_frame(Trades.objects.all().order_by("trade_date"))
+    # 取引情報のうち、今回の処理に必要なtrade_date, brand_codeのみを抽出する
+    # この際、groupby("brand_code").max()　により、格銘柄ごとに現在取得している取引最終日をdataframeとして取得する
+    df = df[["trade_date", "brand_code"]].groupby("brand_code").max()
+    # 扱いやすいようにマルチインデックスを解除する
+    df = df.reset_index()
+    # 既に保有している銘柄に誤りがないか確認
+    df = df[df["brand_code"].isin(owned_brands)]
+    # あとで処理しやすいように、対象銘柄ごとの取引最終日を、重複なしでリストとして取得
+    target_trade_date_list = df["trade_date"].sort_values().drop_duplicates().to_list()
+    returning_list = []
+    # stooq APIを利用するときに扱いやすいよう、[ {"key=trade_date": "value=[brand_codes]"} ]
+    # という形に整える
+    for i in range(len(target_trade_date_list)):
+        a = df[df["trade_date"] == target_trade_date_list[i]]["brand_code"].to_list()
+        returning_list.append({target_trade_date_list[i]: a})
+
+    for c in returning_list:
+        for key, value in c.items():
+            print("-----------")
+            print(key)
+            print(value)
+            _df = data.DataReader(value, "stooq", key, datetime.date.today())
+            _df = _df.reset_index()
+            print(_df.columns)
+            print(_df)
+            time.sleep(1.5)
 
     # →全ての銘柄について、一律指定した日からデータ取得日までのデータを取得すれば良い
     # print("8888.jp" in get_target_brands("jp")[0])
@@ -96,13 +110,13 @@ def get_trades_from_stooq():
 def sort_out_2lists(list1, list2):
     # get_target_brands関数で使用するもの
     # ベン図の交わる部分
-    intersection = set(list1) & set(list2)
+    intersection = list(set(list1) & set(list2))
     # ベン図のうち、どちらかに含まれる部分
-    union_minus_intersection = set(list1) ^ set(list2)
+    union_minus_intersection = list(set(list1) ^ set(list2))
     # ベン図のうち、list1にのみ含まれる部分
-    only_list1 = set(list1) & set(union_minus_intersection)
+    only_list1 = list(set(list1) & set(union_minus_intersection))
     # ベン図のうち、list2にのみ含まれる部分
-    only_list2 = set(list2) & set(union_minus_intersection)
+    only_list2 = list(set(list2) & set(union_minus_intersection))
     return intersection, only_list1, only_list2
 
 
