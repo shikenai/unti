@@ -9,9 +9,15 @@ import os
 from django_pandas.io import read_frame
 
 
+# ----------ここからシステム環境再構築時に使用するもの----------
 def reg_brands_from_csv():
+    # システム環境再構築時に使うことを想定
+    # djangoで吐き出したcsvを新規プロジェクトに移築する時に使ってください
+    # とりあえず旧プロジェクトで吐き出したcsvをdataframeとして取得
     df = pd.read_csv(BASE_DIR / "data/brand.csv")
+    # よくわからんけど、ググった結果、to_dict(orient='records')すれば良いらしい
     de_records = df.to_dict(orient='records')
+    # あとでbulk_createする際に使用する空のリスト
     model_inserts = []
     for d in de_records:
         model_inserts.append(Brand(
@@ -31,13 +37,14 @@ def reg_brands_from_csv():
 
 
 def reg_trades_from_csv():
+    # システム環境再構築時に使うことを想定
+    # djangoで吐き出したcsvを新規プロジェクトに移築する時に使ってください
+    # とりあえず旧プロジェクトで吐き出したcsvをdataframeとして取得
     df = pd.read_csv(BASE_DIR / "data/trade.csv")
+    # よくわからんけど、ググった結果、to_dict(orient='records')すれば良いらしい
     de_records = df.to_dict(orient='records')
+    # あとでbulk_createする際に使用する空のリスト
     model_inserts = []
-    t1 = time.time()
-    # {'Unnamed: 0': 2276171, 'id': 2276173, 'brand': 'ニチレイ(東証１部:2871)', 'brand_code': '2871.jp',
-    #  'trade_date': '1999-04-06', 'open_value': 491.157, 'close_value': 489.357, 'high_value': 496.586,
-    #  'low_value': 480.317, 'volume': 312293}
     for d in de_records:
         model_inserts.append(Trades(
             brand=Brand.objects.get(code=d["brand_code"].split(".")[0], nation=d["brand_code"].split(".")[1]),
@@ -49,32 +56,45 @@ def reg_trades_from_csv():
             low_value=d["low_value"],
             volume=d["volume"]
         ))
-    print(time.time() - t1)
     Trades.objects.bulk_create(model_inserts)
 
 
+# ----------ここまでシステム環境再構築時に使用するもの----------
+
+# ----------ここから日々の取引データ取得に関するもの----------
 def get_trades_from_stooq():
     print('from stppq')
-    # これはこれでいい感じだけど、一旦処理の順番を考えて見ることにした
-    # t1 = time.time()
-    # df = read_frame(Trades.objects.all().order_by("trade_date"))
-    # df = df[["trade_date", "brand_code"]].groupby("brand_code").max()
-    # df = df.reset_index()
+    t1 = time.time()
     # list_brand_code = df["brand_code"].to_list()
     # list_trade_date= df["trade_date"].to_list()
     # _df = df["trade_date"].sort_values().drop_duplicates().to_list()
     # dict_tradedate_brandcode = {}
-    # print(time.time() - t1)
-
 
     # get_target_brands("jp")[0] は、既にある程度の取引状況をデータとして保有しているもの
     # →各銘柄ごとの、取引最終日を取得し、その日以降のデータを取得する必要がある
+    owned_brands = get_target_brands('jp')[0]
+    print(owned_brands)
+    # いい感じ
+    # df = read_frame(Trades.objects.all().order_by("trade_date"))
+    # df = df[["trade_date", "brand_code"]].groupby("brand_code").max()
+    # df = df.reset_index()
+    # target_trade_date_list = df["trade_date"].sort_values().drop_duplicates().to_list()
+    # returning_list = []
+    # for i in range(len(target_trade_date_list)):
+    #     a = df[df["trade_date"] == target_trade_date_list[i]]["brand_code"].to_list()
+    #     returning_list.append({target_trade_date_list[i]: a})
+    # print(returning_list)
+    # いい感じ
 
     # →全ての銘柄について、一律指定した日からデータ取得日までのデータを取得すれば良い
     # print("8888.jp" in get_target_brands("jp")[0])
+    # new_brands = get_target_brands('jp')[1]
+    # ここはもう一括でstooqから取得すれば良いので楽
+    print(time.time() - t1)
 
 
 def sort_out_2lists(list1, list2):
+    # get_target_brands関数で使用するもの
     # ベン図の交わる部分
     intersection = set(list1) & set(list2)
     # ベン図のうち、どちらかに含まれる部分
@@ -87,6 +107,12 @@ def sort_out_2lists(list1, list2):
 
 
 def get_target_brands(nation):
+    # 取引情報を取得するにあたり、①既にある程度取引情報を持っている銘柄　②全く取引情報を持っていない銘柄　の２種類で
+    # 処理方法を分ける必要があるため、①と②を分ける処理を行う。
+    # この際、自作関数sort_out_2_listsを使用する。
+    # returnの一つ目は、２つのリストの交わる部分、二つ目はリスト１にのみ存在する部分、三つ目はリスト２にのみ存在する部分
+    # なお、将来海外銘柄を取り扱う可能性を考慮し、引数としてnationをもつ。日本株の場合は一律"jp"
+
     # 最新の銘柄リスト
     list_csv_brand = list(pd.read_csv(BASE_DIR / "data/before_brand.csv")["コード"])  # ここでは数値として取得しているみたい
     list_csv_brand_str = [str(c) + "." + nation for c in list_csv_brand]  # だから文字列に変換する
@@ -98,8 +124,12 @@ def get_target_brands(nation):
         2]
 
 
+# ----------ここまで日々の取引データ取得に関するもの----------
+
+# ----------ここから東証一部上場企業の銘柄データ取得に関するもの----------
 def get_tse_brands():
     # 東証から銘柄データを取得し、before_brand.csvとして全体を格納。この際、登録されていない銘柄は一括登録する。
+    # 毎月１回やればいいのかなぁと思うけど、そんなに大したことはしてないので、毎日日付変わった時点に実行すればヨシ
     url = "https://www.jpx.co.jp/markets/statistics-equities/misc/tvdivq0000001vg2-att/data_j.xls"
     new_brand = pd.read_excel(url)
     old_brand = pd.read_csv(os.path.join(BASE_DIR, "data", "before_brand.csv"))
@@ -133,6 +163,8 @@ def get_tse_brands():
         print(Brand.objects.all().count())
         print('新規登録なし')
 
+
+# ----------ここまで東証一部上場企業の銘柄データ取得に関するもの----------
 
 class Command(BaseCommand):
     help = "register TSE brands"
