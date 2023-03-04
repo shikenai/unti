@@ -83,39 +83,33 @@ def get_trades_from_stooq():
     # # あとで処理しやすいように、対象銘柄ごとの取引最終日を、重複なしでリストとして取得
     # target_trade_date_list = df["trade_date"].sort_values().drop_duplicates().to_list()
     # returning_list = []
-    # stooq APIを利用するときに扱いやすいよう、[ {"key=trade_date": "value=[brand_codes]"} ]
-    # という形に整える
+    # # stooq APIを利用するときに扱いやすいよう、[ {"key=trade_date": "value=[brand_codes]"} ]
+    # # という形に整える
     # for i in range(len(target_trade_date_list)):
     #     a = df[df["trade_date"] == target_trade_date_list[i]]["brand_code"].to_list()
     #     returning_list.append({target_trade_date_list[i]: a})
-    #
+
     # for c in returning_list:
-    #     for key, value in c.items():
-    #         print("-----------")
-    #         print(key)
-    #         print(value)
-    #         _df = data.DataReader(value, "stooq", key, datetime.date.today())
-    #         _df = _df.reset_index()
-    #         print(_df.columns)
-    #         print(_df)
-    #         time.sleep(1.5)
-    # ---------
-    _df = data.DataReader(['1808.jp', '1810.jp', '1811.jp'], "stooq", dt.date(2023, 1, 20), datetime.date.today())
-    # print(_df)
-    # print(_df.columns)
-    # _df.to_csv(BASE_DIR / "data/multi_columns.csv")
-    # ---------
-    # _df = pd.read_csv(BASE_DIR / "data/multi_columns.csv")
-    import numpy as np
-    # _data = np.random.randint(0, 100, (3, 9))
-    # _data = np.array([[1, 2, 3, 4, 5, 6, 7, 8, 9], [11, 12, 13, 14, 15, 16, 17, 18, 19],
-    #                   [21, 22, 23, 24, 25, 26, 27, 28, 29]])
-    # _columns = [["open", "open", "open", "close", "close", "close", "volume", "volume", "volume"],
-    #             ["1800.jp", "2900.jp", "3000.jp", "1800.jp", "2900.jp", "3000.jp", "1800.jp", "2900.jp", "3000.jp"]]
-    # _index = [dt.date(2023, 3, 1), dt.date(2023, 3, 2), dt.date(2023, 3, 3)]
-    # _df = pd.DataFrame(_data, columns=_columns, index=_index)
-    # _df.index.names = ["date"]
-    edit_multi_columns(_df)
+    #     for last_date, brand_code in c.items():
+    #         if last_date + dt.timedelta(days=60) > dt.date.today():
+    #             print("-----------")
+    #             print(last_date)
+    #             print(brand_code)
+    #             print(last_date + dt.timedelta(days=1))
+    #             _df = data.DataReader(brand_code, "stooq", last_date + dt.timedelta(days=1), datetime.date.today())
+    #             register_from_stooq_use_multi_columns_df(_df)
+    #             time.sleep(2)
+    l = ['1808.jp', '1810.jp', '1811.jp', '1812.jp', '1813.jp', '1814.jp', '1815.jp', '1820.jp', '1821.jp', '1822.jp',
+         '1826.jp', '1827.jp', '1828.jp', '1833.jp', '1835.jp', '1840.jp', '1844.jp', '1847.jp', '1848.jp', '1850.jp',
+         '1852.jp', '1853.jp', '1860.jp', '1866.jp', '1867.jp', '1870.jp', '1871.jp', '1873.jp', '1878.jp', '1879.jp',
+         '1882.jp', '1884.jp', '1885.jp', '1887.jp', '1888.jp', '1890.jp', '1893.jp', '1897.jp', '1898.jp', '1899.jp',
+         '1904.jp', '1905.jp', '1909.jp', '1911.jp', '1914.jp', '1921.jp', '1925.jp', '1926.jp', '1928.jp', '1929.jp',
+         '1930.jp', '1934.jp', '1938.jp', '1939.jp', '1941.jp', '1942.jp', '1944.jp', '1992.jp', '2066.jp', '2070.jp',
+         '2647.jp', '2649.jp', '2795.jp', '2814.jp', '2850.jp']
+    _df = data.DataReader(l, "stooq", dt.date(2023, 1, 21), dt.date.today())
+    print(_df)
+    register_from_stooq_use_multi_columns_df(_df)
+
     # →全ての銘柄について、一律指定した日からデータ取得日までのデータを取得すれば良い
     # print("8888.jp" in get_target_brands("jp")[0])
     # new_brands = get_target_brands('jp')[1]
@@ -123,35 +117,37 @@ def get_trades_from_stooq():
     print(time.time() - t1)
 
 
-def edit_multi_columns(_df_multi_columns):
+def register_from_stooq_use_multi_columns_df(_df_multi_columns):
     # stooq-apiから、銘柄をリストで指定してデータを取得すると、
     # multi_columnになっていて使いづらそうだったので、使いやすい形に直す。
     # ついでに、一括登録しておくことにする。
     print('edit')
     # まず、取得してきたdfのカラムを整理
     df = _df_multi_columns.swaplevel(0, 1, axis=1).sort_index(axis=1)
-    # あとで使うため、行数を取得
-    number = df.shape[0]
     # 取得してきたdfに存在する銘柄のコードを取得（"7203.jp"形式）してリスト化
     list_brand = []
     for i in df.columns:
         if not i[0] in list_brand:
             list_brand.append(i[0])
-    # あとで一括してcreateするため、空のリストを作成しておく
+    # あとでbulk_createするため、空のリストを作成しておく
     model_inserts = []
     # dfの中にあった銘柄を一件ずつ処理していく
     for brand in list_brand:
         # multi_columnだったdfから、指定した銘柄分のみを抽出し、インデックスを整理
         _df = df[brand].reset_index()
-        # 後々のために、銘柄のmodelを取得しておく
+        # queryの実行回数を減らすために、銘柄のmodelを取得しておく
         _brand = Brand.objects.get(code=brand.split(".")[0], nation=brand.split(".")[1])
         df_records = _df.to_dict(orient='records')
+        print(brand)
+
         for d in df_records:
+            print(d["Date"])
             model_inserts.append(Trades(
                 # _brand = 先ほど取得しておいた銘柄のmodel
                 brand=_brand,
                 # brand = list_brandの中に格納しておいた、銘柄コード（"7203.jp"形式）
                 brand_code=brand,
+                # ここから下は、dから取得する
                 trade_date=d["Date"],
                 open_value=d["Open"],
                 close_value=d["Close"],
@@ -159,8 +155,8 @@ def edit_multi_columns(_df_multi_columns):
                 low_value=d["Low"],
                 volume=d["Volume"]
             ))
-    # ここをbulk_createにすれば一括登録完了のはず
     print(model_inserts)
+    # Brand.objects.bulk_create(model_inserts)
 
 
 def sort_out_2lists(list1, list2):
