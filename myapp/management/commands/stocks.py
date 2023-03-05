@@ -51,12 +51,12 @@ def reg_trades_from_csv():
         model_inserts.append(Trades(
             brand=Brand.objects.get(code=d["brand_code"].split(".")[0], nation=d["brand_code"].split(".")[1]),
             brand_code=d["brand_code"],
-            trade_date=d["trade_date"],
-            open_value=d["open_value"],
-            close_value=d["close_value"],
-            high_value=d["high_value"],
-            low_value=d["low_value"],
-            volume=d["volume"]
+            Date=d["trade_date"],
+            Open=d["open_value"],
+            Close=d["close_value"],
+            High=d["high_value"],
+            Low=d["low_value"],
+            Volume=d["volume"]
         ))
     Trades.objects.bulk_create(model_inserts)
 
@@ -72,21 +72,23 @@ def get_trades_from_stooq():
     # →各銘柄ごとの、取引最終日を取得し、その日以降のデータを取得する必要があるため、listで取得
     owned_brands = get_target_brands('jp')[0]
     # 一旦、現在保有している全ての取引情報をdataframeにする
-    df = read_frame(Trades.objects.all().order_by("trade_date"))
+    print('aaa')
+    df = read_frame(Trades.objects.all().order_by("Date"))
+    print(df)
     # 取引情報のうち、今回の処理に必要なtrade_date, brand_codeのみを抽出する
     # この際、groupby("brand_code").max()　により、格銘柄ごとに現在取得している取引最終日をdataframeとして取得する
-    df = df[["trade_date", "brand_code"]].groupby("brand_code").max()
+    df = df[["Date", "brand_code"]].groupby("brand_code").max()
     # 扱いやすいようにマルチインデックスを解除する
     df = df.reset_index()
     # 既に保有している銘柄に誤りがないか確認
     df = df[df["brand_code"].isin(owned_brands)]
     # あとで処理しやすいように、対象銘柄ごとの取引最終日を、重複なしでリストとして取得
-    target_trade_date_list = df["trade_date"].sort_values().drop_duplicates().to_list()
+    target_trade_date_list = df["Date"].sort_values().drop_duplicates().to_list()
     returning_list = []
     # stooq APIを利用するときに扱いやすいよう、[ {"key=trade_date": "value=[brand_codes]"} ]
     # という形に整える
     for i in range(len(target_trade_date_list)):
-        a = df[df["trade_date"] == target_trade_date_list[i]]["brand_code"].to_list()
+        a = df[df["Date"] == target_trade_date_list[i]]["brand_code"].to_list()
         returning_list.append({target_trade_date_list[i]: a})
 
     for c in returning_list:
@@ -138,13 +140,7 @@ def register_from_stooq_use_multi_columns_df(_df_multi_columns):
     for brand in list_brand:
         # multi_columnだったdfから、指定した銘柄分のみを抽出し、インデックスを整理
         _df = df[brand].reset_index()
-        print(brand)
-        print(_df)
-        print(_df.isna().any())
-        # if _df.isna().any():
-        #     pass
-        # else:
-            # queryの実行回数を減らすために、銘柄のmodelを取得しておく
+        # queryの実行回数を減らすために、銘柄のmodelを取得しておく
         _brand = Brand.objects.get(code=brand.split(".")[0], nation=brand.split(".")[1])
         df_records = _df.to_dict(orient='records')
         print(brand)
@@ -163,14 +159,13 @@ def register_from_stooq_use_multi_columns_df(_df_multi_columns):
                 # brand = list_brandの中に格納しておいた、銘柄コード（"7203.jp"形式）
                 brand_code=brand,
                 # ここから下は、dから取得する
-                trade_date=d["Date"],
-                open_value=d["Open"],
-                close_value=d["Close"],
-                high_value=d["High"],
-                low_value=d["Low"],
-                volume=d["Volume"]
+                Date=d["Date"],
+                Open=d["Open"],
+                Close=d["Close"],
+                High=d["High"],
+                Low=d["Low"],
+                Volume=d["Volume"]
             ))
-            print(brand & "is OK")
     Trades.objects.bulk_create(model_inserts)
 
 
@@ -188,6 +183,7 @@ def sort_out_2lists(list1, list2):
 
 
 def get_target_brands(nation):
+    print('get target brands')
     # 取引情報を取得するにあたり、①既にある程度取引情報を持っている銘柄　②全く取引情報を持っていない銘柄　の２種類で
     # 処理方法を分ける必要があるため、①と②を分ける処理を行う。
     # この際、自作関数sort_out_2_listsを使用する。
@@ -199,7 +195,7 @@ def get_target_brands(nation):
     list_csv_brand_str = [str(c) + "." + nation for c in list_csv_brand]  # だから文字列に変換する
     # tradesに登録済の銘柄リスト
     brands_in_trades = list(Trades.objects.all().order_by("brand_code").distinct().values_list('brand_code', flat=True))
-
+    print('done get target brands')
     return sort_out_2lists(list_csv_brand_str, brands_in_trades)[0], \
         sort_out_2lists(list_csv_brand_str, brands_in_trades)[1], sort_out_2lists(list_csv_brand_str, brands_in_trades)[
         2]

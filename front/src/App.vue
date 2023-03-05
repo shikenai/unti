@@ -2,6 +2,7 @@
 import MyTest from "./components/MyTest.vue";
 import SearchBox from "./components/SearchBox.vue";
 import GetTradesBox from "./components/GetTradesBox.vue";
+import CheckStooq from "./components/CheckStooq.vue";
 import axios from "axios";
 import {ref} from "vue";
 
@@ -38,6 +39,7 @@ const switchGetTradeBox = () => {
     <div id="main">
       <SearchBox v-if="toggleSearchBox"/>
       <GetTradesBox v-if="toggleGetTradeBox"/>
+      <CheckStooq/>
     </div>
     <!--    <div id="main" v-if="txt !=='dummy2'" v-html="txt" style="width: 640px; height: 480px;"></div>-->
   </div>

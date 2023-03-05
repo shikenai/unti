@@ -5,6 +5,9 @@ import mplfinance as mf
 from myapp.models import Trades, Brand
 from django_pandas.io import read_frame
 import pandas as pd
+import pandas_datareader.data as data
+import datetime as dt
+
 import json
 
 
@@ -39,4 +42,10 @@ def get_trades_from_stooq(request):
 
 def get_brands_from_tse(request):
     stocks.get_tse_brands()
+    return JsonResponse({"user": "taro"})
+
+
+def check_stooq(request):
+    print('check_stooq')
+    print(data.DataReader("7203.jp", "stooq", dt.date(2023, 1, 1), dt.date(2023, 3, 3)))
     return JsonResponse({"user": "taro"})

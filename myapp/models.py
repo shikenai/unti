@@ -24,15 +24,15 @@ class Brand(models.Model):
 class Trades(models.Model):
     brand = models.ForeignKey(to=Brand, on_delete=models.CASCADE)
     brand_code = models.CharField(max_length=30, null=True, blank=True)
-    trade_date = models.DateField(blank=True, null=True)
-    open_value = models.FloatField(verbose_name='始値', blank=True, null=True)
-    close_value = models.FloatField(verbose_name='終値', blank=True, null=True)
-    high_value = models.FloatField(verbose_name='高値', blank=True, null=True)
-    low_value = models.FloatField(verbose_name='安値', blank=True, null=True)
-    volume = models.IntegerField(verbose_name='出来高', blank=True, null=True)
+    Date = models.DateField(blank=True, null=True)
+    Open = models.FloatField(verbose_name='始値', blank=True, null=True)
+    Close = models.FloatField(verbose_name='終値', blank=True, null=True)
+    High = models.FloatField(verbose_name='高値', blank=True, null=True)
+    Low = models.FloatField(verbose_name='安値', blank=True, null=True)
+    Volume = models.FloatField(verbose_name='出来高', blank=True, null=True)
 
     def __str__(self):
-        return "取引" + self.brand.unique_code() + self.trade_date.strftime("%Y年%m月%d日")
+        return "取引" + self.brand.unique_code() + self.Date.strftime("%Y年%m月%d日")
 
     def values(self):
-        return "{} {} {} {}".format(self.trade_date, self.open_value, self.close_value, self.low_value)
+        return "{} {} {} {}".format(self.Date, self.Open, self.Close, self.Low)
