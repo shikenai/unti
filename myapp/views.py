@@ -11,7 +11,7 @@ import json
 def test(request):
     content = analizer.test()
     return render(request, "test.html", context={
-        "content": content.to_html()
+        # "content": content.to_html()
     })
 
 

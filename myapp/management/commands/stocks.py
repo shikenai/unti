@@ -131,19 +131,32 @@ def register_from_stooq_use_multi_columns_df(_df_multi_columns):
     for i in df.columns:
         if not i[0] in list_brand:
             list_brand.append(i[0])
+    print(list_brand)
     # あとでbulk_createするため、空のリストを作成しておく
     model_inserts = []
     # dfの中にあった銘柄を一件ずつ処理していく
     for brand in list_brand:
         # multi_columnだったdfから、指定した銘柄分のみを抽出し、インデックスを整理
         _df = df[brand].reset_index()
-        # queryの実行回数を減らすために、銘柄のmodelを取得しておく
+        print(brand)
+        print(_df)
+        print(_df.isna().any())
+        # if _df.isna().any():
+        #     pass
+        # else:
+            # queryの実行回数を減らすために、銘柄のmodelを取得しておく
         _brand = Brand.objects.get(code=brand.split(".")[0], nation=brand.split(".")[1])
         df_records = _df.to_dict(orient='records')
         print(brand)
 
         for d in df_records:
+
             print(d["Date"])
+            print(d["Open"])
+            print(d["Close"])
+            print(d["High"])
+            print(d["Low"])
+            print(d["Volume"])
             model_inserts.append(Trades(
                 # _brand = 先ほど取得しておいた銘柄のmodel
                 brand=_brand,
@@ -157,7 +170,7 @@ def register_from_stooq_use_multi_columns_df(_df_multi_columns):
                 low_value=d["Low"],
                 volume=d["Volume"]
             ))
-    # print(model_inserts)
+            print(brand & "is OK")
     Trades.objects.bulk_create(model_inserts)
 
 
