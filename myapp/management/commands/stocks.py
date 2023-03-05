@@ -67,52 +67,54 @@ def reg_trades_from_csv():
 def get_trades_from_stooq():
     print('from stppq')
     t1 = time.time()
-    # # パターン１　既にある程度の取引情報データを保有しているもの
-    # # get_target_brands("jp")[0] は、既にある程度の取引状況をデータとして保有しているもの
-    # # →各銘柄ごとの、取引最終日を取得し、その日以降のデータを取得する必要があるため、listで取得
-    # owned_brands = get_target_brands('jp')[0]
-    # # 一旦、現在保有している全ての取引情報をdataframeにする
-    # df = read_frame(Trades.objects.all().order_by("trade_date"))
-    # # 取引情報のうち、今回の処理に必要なtrade_date, brand_codeのみを抽出する
-    # # この際、groupby("brand_code").max()　により、格銘柄ごとに現在取得している取引最終日をdataframeとして取得する
-    # df = df[["trade_date", "brand_code"]].groupby("brand_code").max()
-    # # 扱いやすいようにマルチインデックスを解除する
-    # df = df.reset_index()
-    # # 既に保有している銘柄に誤りがないか確認
-    # df = df[df["brand_code"].isin(owned_brands)]
-    # # あとで処理しやすいように、対象銘柄ごとの取引最終日を、重複なしでリストとして取得
-    # target_trade_date_list = df["trade_date"].sort_values().drop_duplicates().to_list()
-    # returning_list = []
-    # # stooq APIを利用するときに扱いやすいよう、[ {"key=trade_date": "value=[brand_codes]"} ]
-    # # という形に整える
-    # for i in range(len(target_trade_date_list)):
-    #     a = df[df["trade_date"] == target_trade_date_list[i]]["brand_code"].to_list()
-    #     returning_list.append({target_trade_date_list[i]: a})
+    # パターン１　既にある程度の取引情報データを保有しているもの
+    # get_target_brands("jp")[0] は、既にある程度の取引状況をデータとして保有しているもの
+    # →各銘柄ごとの、取引最終日を取得し、その日以降のデータを取得する必要があるため、listで取得
+    owned_brands = get_target_brands('jp')[0]
+    # 一旦、現在保有している全ての取引情報をdataframeにする
+    df = read_frame(Trades.objects.all().order_by("trade_date"))
+    # 取引情報のうち、今回の処理に必要なtrade_date, brand_codeのみを抽出する
+    # この際、groupby("brand_code").max()　により、格銘柄ごとに現在取得している取引最終日をdataframeとして取得する
+    df = df[["trade_date", "brand_code"]].groupby("brand_code").max()
+    # 扱いやすいようにマルチインデックスを解除する
+    df = df.reset_index()
+    # 既に保有している銘柄に誤りがないか確認
+    df = df[df["brand_code"].isin(owned_brands)]
+    # あとで処理しやすいように、対象銘柄ごとの取引最終日を、重複なしでリストとして取得
+    target_trade_date_list = df["trade_date"].sort_values().drop_duplicates().to_list()
+    returning_list = []
+    # stooq APIを利用するときに扱いやすいよう、[ {"key=trade_date": "value=[brand_codes]"} ]
+    # という形に整える
+    for i in range(len(target_trade_date_list)):
+        a = df[df["trade_date"] == target_trade_date_list[i]]["brand_code"].to_list()
+        returning_list.append({target_trade_date_list[i]: a})
 
-    # for c in returning_list:
-    #     for last_date, brand_code in c.items():
-    #         if last_date + dt.timedelta(days=60) > dt.date.today():
-    #             print("-----------")
-    #             print(last_date)
-    #             print(brand_code)
-    #             print(last_date + dt.timedelta(days=1))
-    #             _df = data.DataReader(brand_code, "stooq", last_date + dt.timedelta(days=1), datetime.date.today())
-    #             register_from_stooq_use_multi_columns_df(_df)
-    #             time.sleep(2)
-    l = ['1808.jp', '1810.jp', '1811.jp', '1812.jp', '1813.jp', '1814.jp', '1815.jp', '1820.jp', '1821.jp', '1822.jp',
-         '1826.jp', '1827.jp', '1828.jp', '1833.jp', '1835.jp', '1840.jp', '1844.jp', '1847.jp', '1848.jp', '1850.jp',
-         '1852.jp', '1853.jp', '1860.jp', '1866.jp', '1867.jp', '1870.jp', '1871.jp', '1873.jp', '1878.jp', '1879.jp',
-         '1882.jp', '1884.jp', '1885.jp', '1887.jp', '1888.jp', '1890.jp', '1893.jp', '1897.jp', '1898.jp', '1899.jp',
-         '1904.jp', '1905.jp', '1909.jp', '1911.jp', '1914.jp', '1921.jp', '1925.jp', '1926.jp', '1928.jp', '1929.jp',
-         '1930.jp', '1934.jp', '1938.jp', '1939.jp', '1941.jp', '1942.jp', '1944.jp', '1992.jp', '2066.jp', '2070.jp',
-         '2647.jp', '2649.jp', '2795.jp', '2814.jp', '2850.jp']
-    _df = data.DataReader(l, "stooq", dt.date(2023, 1, 21), dt.date.today())
-    print(_df)
-    register_from_stooq_use_multi_columns_df(_df)
+    for c in returning_list:
+        for last_date, brand_code in c.items():
+            if last_date + dt.timedelta(days=60) > dt.date.today():
+                print("-----------")
+                print(last_date)
+                print(brand_code)
+                print(last_date + dt.timedelta(days=1))
+                _df = data.DataReader(brand_code, "stooq", last_date + dt.timedelta(days=1), datetime.date.today())
+                register_from_stooq_use_multi_columns_df(_df)
+                time.sleep(2)
+    # l = ['1808.jp', '1810.jp', '1811.jp', '1812.jp', '1813.jp', '1814.jp', '1815.jp', '1820.jp', '1821.jp', '1822.jp',
+    #      '1826.jp', '1827.jp', '1828.jp', '1833.jp', '1835.jp', '1840.jp', '1844.jp', '1847.jp', '1848.jp', '1850.jp',
+    #      '1852.jp', '1853.jp', '1860.jp', '1866.jp', '1867.jp', '1870.jp', '1871.jp', '1873.jp', '1878.jp', '1879.jp',
+    #      '1882.jp', '1884.jp', '1885.jp', '1887.jp', '1888.jp', '1890.jp', '1893.jp', '1897.jp', '1898.jp', '1899.jp',
+    #      '1904.jp', '1905.jp', '1909.jp', '1911.jp', '1914.jp', '1921.jp', '1925.jp', '1926.jp', '1928.jp', '1929.jp',
+    #      '1930.jp', '1934.jp', '1938.jp', '1939.jp', '1941.jp', '1942.jp', '1944.jp', '1992.jp', '2066.jp', '2070.jp',
+    #      '2647.jp', '2649.jp', '2795.jp', '2814.jp', '2850.jp']
+    # _df = data.DataReader(l, "stooq", dt.date(2023, 1, 21), dt.date.today())
+    # print(_df)
+    # register_from_stooq_use_multi_columns_df(_df)
 
     # →全ての銘柄について、一律指定した日からデータ取得日までのデータを取得すれば良い
     # print("8888.jp" in get_target_brands("jp")[0])
-    # new_brands = get_target_brands('jp')[1]
+    new_brands = get_target_brands('jp')[1]
+    _df = data.DataReader(new_brands, "stooq", dt.date(1990, 1,1), datetime.date.today())
+    register_from_stooq_use_multi_columns_df(_df)
     # ここはもう一括でstooqから取得すれば良いので楽
     print(time.time() - t1)
 
@@ -121,7 +123,7 @@ def register_from_stooq_use_multi_columns_df(_df_multi_columns):
     # stooq-apiから、銘柄をリストで指定してデータを取得すると、
     # multi_columnになっていて使いづらそうだったので、使いやすい形に直す。
     # ついでに、一括登録しておくことにする。
-    print('edit')
+    print('reg!!!')
     # まず、取得してきたdfのカラムを整理
     df = _df_multi_columns.swaplevel(0, 1, axis=1).sort_index(axis=1)
     # 取得してきたdfに存在する銘柄のコードを取得（"7203.jp"形式）してリスト化
@@ -155,8 +157,8 @@ def register_from_stooq_use_multi_columns_df(_df_multi_columns):
                 low_value=d["Low"],
                 volume=d["Volume"]
             ))
-    print(model_inserts)
-    # Brand.objects.bulk_create(model_inserts)
+    # print(model_inserts)
+    Trades.objects.bulk_create(model_inserts)
 
 
 def sort_out_2lists(list1, list2):

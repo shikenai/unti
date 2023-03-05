@@ -9,8 +9,10 @@ import json
 
 
 def test(request):
-    analizer.test()
-    return render(request, "test.html")
+    content = analizer.test()
+    return render(request, "test.html", context={
+        "content": content.to_html()
+    })
 
 
 def get_trade_data(request):

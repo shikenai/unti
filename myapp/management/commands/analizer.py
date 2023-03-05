@@ -8,13 +8,9 @@ import datetime
 import numpy as np
 
 
-def set_gdx(row):
-    # 短期移動平均線と長期移動平均線をみて、ゴールデンクロスかデッドクラスかをbooleanで判定
-    if row["short_MA"] > row["long_MA"]:
-        row["gdx"] = True
-    else:
-        row["gdx"] = False
-    return row
+# def compare_2_columns(column1, column2):
+#     if column1 > column2:
+#         return row[]
 
 
 def set_sanyaku(row):
@@ -69,17 +65,8 @@ def set_ichimoku_cloud(df):
     return df
 
 
-def set_ma(df, short_span, long_span):
-    df["short_MA"] = df["close_value"].rolling(short_span).mean()
-    df["long_MA"] = df["close_value"].rolling(long_span).mean()
-    return df
-
-
-def set_close_diff(df):
-    # 日々の終値の差分を抽出するとともに、その割合を計算
-    df["diff_close_value"] = df["close_value"].diff()
-    df["diff_close_value_rate"] = df["close_value"].pct_change()
-    return df
+def compare_2columns(df, column1, column2):
+    df["{}_minus_{}".format(column1, column2)] = df[column1] - df[column2]
 
 
 # ------MACD--start------
@@ -100,33 +87,85 @@ def calc_macd(prices, period_short, period_long, period_signal):
     macd = ema_short - ema_long  # MACD = 短期移動平均 - 長期移動平均
     signal = pd.Series(macd).rolling(period_signal).mean()  # シグナル = MACD の移動平均
     hist = macd - signal
-    return macd, signal, hist
+    hist_rate = hist / prices
+    return macd, signal, hist, hist_rate
 
 
 def set_macd(df):
-    df['macd_line'], df['macd_signal'], df['macd_hist'] = calc_macd(df.close_value, 12, 26, 9)
+    df['macd_line'], df['macd_signal'], df['macd_hist'], df['macd_hist_rate'] = calc_macd(df.close_value, 12, 26, 9)
     return df
 
+
 # ------MACD---end-------
+def operate_single_column(df, column, **kwargs):
+    # 指定した一つの列に対して、前日との差分及びその率並びに移動平均を取得するもの
+    # 使用例：一昨日と昨日の終値の異動、異動/終値（終値からみて、どの程度異動したのか）
+    if kwargs.get('diff'):
+        df["diff_{}".format(column)] = df[column].diff()
+    if kwargs.get('diff_pct'):
+        df["diff_pct_{}".format(column)] = df[column].pct_change()
+    if kwargs.get('ma_span'):
+        for span in kwargs['ma_span']:
+            df["{}MA_{}".format(span, column)] = df[column].rolling(span).mean()
+
+
+def operate_double_columns(df, column1, column2, **kwargs):
+    if kwargs.get('size_comparison'):
+        df["{}_gt_{}".format(column1, column2)] = df[column1] - df[column2]
+
+
+def set_gdx(row, short, long, name):
+    new_column = "trend_by_{}".format(name)
+    # short（短期）が上昇
+    if row[short] > 0:
+        # 短期上昇
+        if row[long] < 0:
+            row[new_column] = "買い"
+        else:
+            if row[short] >= row[long]:
+                # 短期の上昇が長期の上昇より強い
+                row[new_column] = "まだ上昇"
+            else:
+                # 短期の上昇が長期の上昇よりも緩い
+                row[new_column] = "注意"
+    else:
+        # 短期が下降
+        if row[long] > 0:
+            row[new_column] = "下降！"
+        else:
+            if row[short] > row[long]:
+                row[new_column] = '好転？'
+            else:
+                row[new_column] = 'まだまだ暗黒'
+    return row
 
 
 def test():
-    _trades = Trades.objects.filter(brand_code="7203.jp").order_by("trade_date")
+    _trades = Trades.objects.filter(brand_code="1301.jp").order_by("trade_date")
     n = _trades.count()
-    x = 100
+    x = 500
     if n < x:
         n_minus = 0
     else:
         n_minus = n - x
     df = read_frame(_trades.all()[n_minus:n])
+    operate_single_column(df, "close_value", ma_span=[3, 25])
+    operate_double_columns(df, "3MA_close_value", "25MA_close_value", size_comparison=True)
+    df = df.apply(set_gdx, args=("3MA_close_value", "25MA_close_value", 'MA'), axis=1)
+    operate_single_column(df, '3MA_close_value_gt_25MA_close_value', ma_span=[3])
     # df = set_ma(df, 3, 26)
+    # df = set_ma(df, "close_value", "short", 3)
+    # set_diff_and_pct(df, "short_MA")
+    # df = set_ma(df, "close_value", "long", 25)
+    # set_diff_and_pct(df, "long_MA", type="only", span=3)
+    # compare_2columns(df, "diff_short_MA", "diff_long_MA")
     # df = df.apply(set_gdx, axis=1)
-    # df = set_close_diff(df)
     # df = set_ichimoku_cloud(df)
     # df = df.apply(set_sanyaku, axis=1)
-    df = set_macd(df)
-    pd.set_option('display.max_columns', df.shape[1])
-    print(df)
+    # df = set_macd(df)
+    # pd.set_option('display.max_columns', df.shape[1])
+    # print(df)
+    return df.T
     # print(df.head(30))
     # print("----------------------")
     # print(df.tail(30))
