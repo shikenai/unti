@@ -140,10 +140,12 @@ def register_from_stooq_use_multi_columns_df(_df_multi_columns):
     for brand in list_brand:
         # multi_columnだったdfから、指定した銘柄分のみを抽出し、インデックスを整理
         _df = df[brand].reset_index()
+        print(_df.dtypes)
         # queryの実行回数を減らすために、銘柄のmodelを取得しておく
         _brand = Brand.objects.get(code=brand.split(".")[0], nation=brand.split(".")[1])
         df_records = _df.to_dict(orient='records')
         print(brand)
+        print(df_records)
 
         for d in df_records:
 

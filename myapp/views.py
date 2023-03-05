@@ -1,3 +1,4 @@
+import pandas
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from myapp.management.commands import stocks, drawer, analizer
@@ -47,5 +48,10 @@ def get_brands_from_tse(request):
 
 def check_stooq(request):
     print('check_stooq')
-    print(data.DataReader("7203.jp", "stooq", dt.date(2023, 1, 1), dt.date(2023, 3, 3)))
+    t1 = pd.Timestamp(2023, 3, 1)
+    t2 = pd.Timestamp(2023, 3, 2)
+    df = pd.DataFrame(data=[t1, t2], columns=['Date'])
+    df["Date2"] = df["Date"].astype(dtype="datetime")
+    print(df)
+    # print(data.DataReader("7203.jp", "stooq", dt.date(2023, 1, 1), dt.date(2023, 3, 3)))
     return JsonResponse({"user": "taro"})
