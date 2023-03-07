@@ -23,7 +23,7 @@ def plt2svg():
 
 # 実行するビュー関数
 def get_svg2http_response(days, brand_code):
-    _trades = Trades.objects.filter(brand_code=brand_code).order_by("trade_date")
+    _trades = Trades.objects.filter(brand_code=brand_code).order_by("Date")
     n = _trades.count()
     print(n)
     x = days
@@ -33,11 +33,10 @@ def get_svg2http_response(days, brand_code):
         n_minus = n - x
     df = read_frame(_trades.all()[n_minus:n])
 
-    df["trade_date"] = pd.to_datetime(df["trade_date"])
-    df = df.set_index("trade_date")
-    df = df.reindex(columns=['open_value', 'high_value', 'low_value', 'close_value', 'volume'])
-    df = df.rename(columns={'open_value': "Open", 'high_value': "High", 'low_value': "Low", 'close_value': "Close",
-                            'volume': "Volume"})
+    df["Date"] = pd.to_datetime(df["Date"])
+    df = df.set_index("Date")
+    df = df.reindex(columns=['Open', 'High', 'Low', 'Close', 'Volume'])
+
     mf.plot(df,
             type="candle",
             mav=[5, 12],

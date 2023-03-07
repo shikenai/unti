@@ -11,4 +11,5 @@ urlpatterns = [
     path('api/get_trades_from_stooq', views.get_trades_from_stooq),
     path('api/get_brands_from_tse', views.get_brands_from_tse),
     path('api/check_stooq', views.check_stooq),
+    path('api/check_stooq_df', views.check_stooq_df),
 ]

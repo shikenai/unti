@@ -12,11 +12,16 @@ const check_stooq = () => {
   axios.get('api/check_stooq').then(res => {
   })
 }
+const check_stooq_df = () => {
+  axios.get('api/check_stooq_df').then(res => {
+  })
+}
 </script>
 
 
 <template>
-  <a href="" @click.prevent="check_stooq">check stooq</a>
+  <a href="" @click.prevent="check_stooq">check stooq</a><br>
+  <a href="" @click.prevent="check_stooq_df">check stooq_df</a>
 </template>
 
 

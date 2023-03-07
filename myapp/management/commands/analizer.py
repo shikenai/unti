@@ -141,28 +141,18 @@ def set_gdx(row, short, long, name):
 
 
 def test():
-    di = {"a": 11, "b": "st", "c": float('nan')}
-    print(di)
-    print(list(di.items()))
-    print(list(di.values()))
-    for i in di.values():
-        print(type(i))
-    if list(di.values()).count(float('nan')):
-        print('aru')
+    _trades = Trades.objects.filter(brand_code="1808.jp").order_by("Date")
+    n = _trades.count()
+    x = 1000
+    if n < x:
+        n_minus = 0
     else:
-        print('nai')
-    # _trades = Trades.objects.filter(brand_code="1301.jp").order_by("trade_date")
-    # n = _trades.count()
-    # x = 500
-    # if n < x:
-    #     n_minus = 0
-    # else:
-    #     n_minus = n - x
-    # df = read_frame(_trades.all()[n_minus:n])
-    # operate_single_column(df, "close_value", ma_span=[3, 25])
-    # operate_double_columns(df, "3MA_close_value", "25MA_close_value", size_comparison=True)
-    # df = df.apply(set_gdx, args=("3MA_close_value", "25MA_close_value", 'MA'), axis=1)
-    # operate_single_column(df, '3MA_close_value_gt_25MA_close_value', ma_span=[3])
+        n_minus = n - x
+    df = read_frame(_trades.all()[n_minus:n])
+    operate_single_column(df, "Close",diff=True, diff_pct=True, ma_span=[3, 25])
+    operate_double_columns(df, "3MA_Close", "25MA_Close", size_comparison=True)
+    df = df.apply(set_gdx, args=("3MA_Close", "25MA_Close", 'MA'), axis=1)
+    operate_single_column(df, '3MA_Close_gt_25MA_Close', ma_span=[3])
 
     # df = set_ma(df, 3, 26)
     # df = set_ma(df, "close_value", "short", 3)
@@ -176,7 +166,10 @@ def test():
     # df = set_macd(df)
     # pd.set_option('display.max_columns', df.shape[1])
 
-    # return df.T
+    # df = df[["Date", "Close", "diff_Close"]][26:]
+    df = df[26:]
+
+    return df.T
 
 
 class Command(BaseCommand):

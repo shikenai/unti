@@ -15,7 +15,7 @@ import json
 def test(request):
     content = analizer.test()
     return render(request, "test.html", context={
-        # "content": content.to_html()
+        "content": content.to_html()
     })
 
 
@@ -54,4 +54,26 @@ def check_stooq(request):
     df["Date2"] = df["Date"].astype(dtype="datetime")
     print(df)
     # print(data.DataReader("7203.jp", "stooq", dt.date(2023, 1, 1), dt.date(2023, 3, 3)))
+    return JsonResponse({"user": "taro"})
+
+
+def check_stooq_df(request):
+    print('check_stooq_df')
+    t1 = dt.date(2023, 1, 21)
+    t2 = dt.date.today()
+    df1 = data.DataReader("7203.jp", "stooq", t1, t2)
+    df2 = data.DataReader("1808.jp", "stooq", t1, t2)
+    print('--------df1')
+    print(df1)
+    print(df1.dtypes)
+    df1 = df1.reset_index()
+    print(df1)
+    print(df1.dtypes)
+    print('--------df2')
+    print(df2)
+    print(df2.dtypes)
+    df2 = df2.reset_index()
+    print(df2)
+    print(df2.dtypes)
+
     return JsonResponse({"user": "taro"})
