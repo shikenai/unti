@@ -1,3 +1,5 @@
+import math
+
 from django.core.management.base import BaseCommand
 import pandas as pd
 from unti.settings import BASE_DIR
@@ -143,31 +145,46 @@ def set_gdx(row, short, long, name):
 def test():
     _trades = Trades.objects.filter(brand_code="1808.jp").order_by("Date")
     n = _trades.count()
-    x = 1000
+    x = 10000
     if n < x:
         n_minus = 0
     else:
         n_minus = n - x
     df = read_frame(_trades.all()[n_minus:n])
-    operate_single_column(df, "Close",diff=True, diff_pct=True, ma_span=[3, 25])
+    # # Close列に対して、変化推移、変化率、３日移動平均、２５日移動平均を追加
+    operate_single_column(df, "Close", diff=True, diff_pct=True, ma_span=[3, 25])
     operate_double_columns(df, "3MA_Close", "25MA_Close", size_comparison=True)
     df = df.apply(set_gdx, args=("3MA_Close", "25MA_Close", 'MA'), axis=1)
     operate_single_column(df, '3MA_Close_gt_25MA_Close', ma_span=[3])
 
-    # df = set_ma(df, 3, 26)
-    # df = set_ma(df, "close_value", "short", 3)
-    # set_diff_and_pct(df, "short_MA")
-    # df = set_ma(df, "close_value", "long", 25)
-    # set_diff_and_pct(df, "long_MA", type="only", span=3)
-    # compare_2columns(df, "diff_short_MA", "diff_long_MA")
-    # df = df.apply(set_gdx, axis=1)
     # df = set_ichimoku_cloud(df)
     # df = df.apply(set_sanyaku, axis=1)
     # df = set_macd(df)
     # pd.set_option('display.max_columns', df.shape[1])
 
-    # df = df[["Date", "Close", "diff_Close"]][26:]
+    # df = df[["brand", "brand_code", "Date", "Close"]]
+    # n = -5
+    # df["shift"] = df["Close"].shift(n)
+    # df["shift_max"] = df["Close"].shift(n).rolling(n // 2 - n, center=True).max()
+
     df = df[26:]
+    df = df.reset_index(drop=True)
+    # print(df['2023-01-01': '2023-02-02'])
+    col_num = df.columns.get_loc('Close')
+    n = 21
+    index_num = df.shape[0]
+    max_list = []
+    for i in range(index_num):
+        if i + n <= index_num:
+            max_list.append(df.iloc[i:i + n, [col_num]].max().max())
+        else:
+            max_list.append(np.nan)
+    print(max_list)
+    print(len(max_list))
+    for j in range(len(max_list)):
+        print(j)
+        print(max_list[j])
+    df["{}日後までの最大値".format(n)] = max_list
 
     return df.T
 
