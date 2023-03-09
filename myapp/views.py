@@ -12,8 +12,8 @@ import datetime as dt
 import json
 
 
-def test(request):
-    content = analizer.test()
+def analize(request):
+    content = analizer.analize("1808.jp", 500)
     return render(request, "test.html", context={
         "content": content.to_html()
     })

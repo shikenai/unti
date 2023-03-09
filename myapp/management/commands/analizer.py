@@ -10,25 +10,20 @@ import datetime
 import numpy as np
 
 
-# def compare_2_columns(column1, column2):
-#     if column1 > column2:
-#         return row[]
-
-
 def set_sanyaku(row):
     # set_ichimoku_cloud()後に使用するもの。三役好転か、三役暗転かどうかを判定する
-    if row["conversion_line"] > row["base_line"] and row["lagging_span"] > row["close_value"] > row["leading_span1"] and \
-            row["close_value"] > row["leading_span2"]:
+    if row["conversion_line"] > row["base_line"] and row["lagging_span"] > row["Close"] > row["leading_span1"] and \
+            row["Close"] > row["leading_span2"]:
         row["sanyaku"] = True
-    elif row["conversion_line"] < row["base_line"] and row["lagging_span"] < row["close_value"] < row[
-        "leading_span1"] and row["close_value"] < row["leading_span2"]:
+    elif row["conversion_line"] < row["base_line"] and row["lagging_span"] < row["Close"] < row[
+        "leading_span1"] and row["Close"] < row["leading_span2"]:
         row["sanyaku"] = False
     else:
         row["sanyaku"] = None
     # set_ichimoku_cloud()後に使用するもの。終値が雲の上にあるのか下にあるのかを判定する
-    if row["close_value"] > row["leading_span1"] and row["close_value"] > row["leading_span2"]:
+    if row["Close"] > row["leading_span1"] and row["Close"] > row["leading_span2"]:
         row["over_cloud"] = True
-    elif row["close_value"] < row["leading_span1"] and row["close_value"] < row["leading_span2"]:
+    elif row["Close"] < row["leading_span1"] and row["Close"] < row["leading_span2"]:
         row["over_cloud"] = False
     else:
         row["sanyaku"] = None
@@ -38,31 +33,31 @@ def set_sanyaku(row):
 def set_ichimoku_cloud(df):
     # 一目均衡表に関するデータを作成
     additional_dates = pd.date_range(
-        start=df["trade_date"].max() + datetime.timedelta(days=1),
-        end=df["trade_date"].max() + datetime.timedelta(days=25),
+        start=df["Date"].max() + datetime.timedelta(days=1),
+        end=df["Date"].max() + datetime.timedelta(days=25),
     )
 
-    df = pd.concat([df, pd.DataFrame(additional_dates, columns=["trade_date"])], ignore_index=True)
+    df = pd.concat([df, pd.DataFrame(additional_dates, columns=["Date"])], ignore_index=True)
     # 基準線
-    high26 = df["high_value"].rolling(window=26).max()
-    low26 = df["low_value"].rolling(window=26).min()
+    high26 = df["High"].rolling(window=26).max()
+    low26 = df["Low"].rolling(window=26).min()
     df["base_line"] = (high26 + low26) / 2
     # 転換線
-    high9 = df["high_value"].rolling(window=9).max()
-    low9 = df["low_value"].rolling(window=9).min()
+    high9 = df["High"].rolling(window=9).max()
+    low9 = df["Low"].rolling(window=9).min()
     df["conversion_line"] = (high9 + low9) / 2
     # 先行スパン1
     leading_span1 = (df["base_line"] + df["conversion_line"]) / 2
     df["leading_span1"] = leading_span1.shift(25)
 
     # 先行スパン2
-    high52 = df["high_value"].rolling(window=52).max()
-    low52 = df["low_value"].rolling(window=52).min()
+    high52 = df["High"].rolling(window=52).max()
+    low52 = df["Low"].rolling(window=52).min()
     leading_span2 = (high52 + low52) / 2
     df["leading_span2"] = leading_span2.shift(25)
 
     # 遅行スパン
-    df["lagging_span"] = df["close_value"].shift(-25)
+    df["lagging_span"] = df["Close"].shift(-25)
 
     return df
 
@@ -94,7 +89,7 @@ def calc_macd(prices, period_short, period_long, period_signal):
 
 
 def set_macd(df):
-    df['macd_line'], df['macd_signal'], df['macd_hist'], df['macd_hist_rate'] = calc_macd(df.close_value, 12, 26, 9)
+    df['macd_line'], df['macd_signal'], df['macd_hist'], df['macd_hist_rate'] = calc_macd(df.Close, 12, 26, 9)
     return df
 
 
@@ -114,6 +109,10 @@ def operate_single_column(df, column, **kwargs):
 def operate_double_columns(df, column1, column2, **kwargs):
     if kwargs.get('size_comparison'):
         df["{}_gt_{}".format(column1, column2)] = df[column1] - df[column2]
+    if kwargs.get('size_comparison_pct'):
+        x = "{}_minus_{}".format(column1, column2)
+        df[x] = df[column1] - df[column2]
+        df["{}_/_{}_pct".format(column1, column2)] = df[x] / df[column1]
 
 
 def set_gdx(row, short, long, name):
@@ -142,10 +141,10 @@ def set_gdx(row, short, long, name):
     return row
 
 
-def test():
-    _trades = Trades.objects.filter(brand_code="1808.jp").order_by("Date")
+def analize(brand, cnt):
+    _trades = Trades.objects.filter(brand_code=brand).order_by("Date")
     n = _trades.count()
-    x = 10000
+    x = cnt
     if n < x:
         n_minus = 0
     else:
@@ -155,36 +154,33 @@ def test():
     operate_single_column(df, "Close", diff=True, diff_pct=True, ma_span=[3, 25])
     operate_double_columns(df, "3MA_Close", "25MA_Close", size_comparison=True)
     df = df.apply(set_gdx, args=("3MA_Close", "25MA_Close", 'MA'), axis=1)
-    operate_single_column(df, '3MA_Close_gt_25MA_Close', ma_span=[3])
+    operate_single_column(df, '3MA_Close_gt_25MA_Close', diff=True, diff_pct=True, ma_span=[3])
 
-    # df = set_ichimoku_cloud(df)
-    # df = df.apply(set_sanyaku, axis=1)
-    # df = set_macd(df)
-    # pd.set_option('display.max_columns', df.shape[1])
-
-    # df = df[["brand", "brand_code", "Date", "Close"]]
-    # n = -5
-    # df["shift"] = df["Close"].shift(n)
-    # df["shift_max"] = df["Close"].shift(n).rolling(n // 2 - n, center=True).max()
+    df = set_ichimoku_cloud(df)
+    df = df.apply(set_sanyaku, axis=1)
+    df = set_macd(df)
 
     df = df[26:]
     df = df.reset_index(drop=True)
-    # print(df['2023-01-01': '2023-02-02'])
     col_num = df.columns.get_loc('Close')
     n = 21
     index_num = df.shape[0]
     max_list = []
     for i in range(index_num):
         if i + n <= index_num:
-            max_list.append(df.iloc[i:i + n, [col_num]].max().max())
+            max_list.append(df.iloc[i + 1:i + n, [col_num]].max().max())
         else:
             max_list.append(np.nan)
-    print(max_list)
-    print(len(max_list))
-    for j in range(len(max_list)):
-        print(j)
-        print(max_list[j])
-    df["{}日後までの最大値".format(n)] = max_list
+    column_name = "{}日後までの最大値".format(n)
+    df[column_name] = max_list
+    operate_double_columns(df, column_name, "Close", size_comparison_pct=True)
+    # df = df[
+    #     ['Date', 'Close', '3MA_Close', '25MA_Close', 'trend_by_MA', '3MA_3MA_Close_gt_25MA_Close', '21日後までの最大値',
+    #      "21日後までの最大値_/_Close_pct"]]
+    # df = df.rename(
+    #     columns={'Date': '日付', 'Close': '終値', '3MA_Close': '短期移動平均（３日）', '25MA_Close': '短期移動平均（25日）',
+    #              'trend_by_MA': 'シグナル（移動平均）', '3MA_3MA_Close_gt_25MA_Close': 'シグナル（オリジナル）',
+    #              '21日後までの最大値_/_Close_pct': '21日後までの最大値（伸び率）'})
 
     return df.T
 
@@ -196,4 +192,4 @@ class Command(BaseCommand):
         parser.add_argument("first", type=str)
 
     def handle(self, *args, **options):
-        test()
+        analize()
